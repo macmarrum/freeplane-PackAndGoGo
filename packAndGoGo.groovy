@@ -7,7 +7,7 @@
 // (at your option) any later version.
 
 
-import org.freeplane.core.ui.ExampleFileFilter
+import org.freeplane.core.ui.CaseSensitiveFileNameExtensionFilter
 import org.freeplane.core.util.FreeplaneVersion
 import org.freeplane.core.util.LogUtils
 import org.freeplane.features.map.MapModel
@@ -111,7 +111,7 @@ private boolean confirmOverwrite(File file) {
 }
 
 private File askForZipFile(File zipFile) {
-    def zipFileFilter = new ExampleFileFilter('zip')
+    def zipFileFilter = new CaseSensitiveFileNameExtensionFilter('zip', 'ZIP files')
     def chooser = new JFileChooser(fileSelectionMode: JFileChooser.FILES_ONLY, fileFilter: zipFileFilter, selectedFile: zipFile)
     if (chooser.showSaveDialog() == JFileChooser.APPROVE_OPTION) {
         if (!chooser.selectedFile.exists() || confirmOverwrite(chooser.selectedFile))
