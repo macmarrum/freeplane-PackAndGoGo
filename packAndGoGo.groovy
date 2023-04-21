@@ -7,12 +7,12 @@
 // (at your option) any later version.
 
 
+import org.freeplane.api.MindMap
 import org.freeplane.core.ui.CaseSensitiveFileNameExtensionFilter
 import org.freeplane.core.util.LogUtils
 import org.freeplane.features.map.MapModel
 import org.freeplane.features.map.MapWriter.Mode
 import org.freeplane.features.mode.Controller
-import org.freeplane.plugin.script.proxy.MapProxy
 
 import javax.swing.*
 import java.text.MessageFormat
@@ -115,7 +115,7 @@ File getUriAsFile(File mapDir, URI uri) {
 }
 
 // searches the map for file references that have to be mapped to a file in the zip
-private createFileToPathInZipMap(MapModel newMap, String dependenciesDir) {
+private createFileToPathInZipMap(MindMap newMindMap, String dependenciesDir) {
     File mapDir = node.map.file.parentFile
     // closure, re-usable for text, details and notes
     def handleHtmlText = { String text, Map<File, String> map ->
@@ -144,7 +144,7 @@ private createFileToPathInZipMap(MapModel newMap, String dependenciesDir) {
         }
         return text
     }
-    def fileToPathInZipMap = new MapProxy(newMap, null).root.findAll().inject([:]) { map, node ->
+    def fileToPathInZipMap = newMindMap.root.findAll().inject([:]) { map, node ->
         def path
         // == link
         path = getMappedPath(node.link.uri, map, mapDir, dependenciesDir)
@@ -218,15 +218,15 @@ boolean zipMap(File file) {
     if (zipFile == null)
         return
     def dependenciesDir = "${baseName}-files"
-    MapModel newMap = c.mapLoader(file.toURI().toURL()).unsetMapLocation().mindMap.delegate
-    if (newMap == null) {
+    MindMap newMindMap = c.mapLoader(file.toURI().toURL()).unsetMapLocation().mindMap
+    if (newMindMap == null) {
         ui.errorMessage(getText('Can not create a copy of {0}', file))
         return
     }
     // original file -> zip file name
-    def fileToPathInZipMap = createFileToPathInZipMap(newMap, dependenciesDir)
+    def fileToPathInZipMap = createFileToPathInZipMap(newMindMap, dependenciesDir)
     // add the map itself
-    def bytes = getZipBytes(fileToPathInZipMap, file, getBytes(newMap))
+    def bytes = getZipBytes(fileToPathInZipMap, file, getBytes(newMindMap.delegate))
 
     zipFile.bytes = bytes
     logger.info("zipMap: wrote ${zipFile.absolutePath}")
