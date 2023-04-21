@@ -69,7 +69,7 @@ private String getPathInZip(File file, String dependenciesDir, Map<File, String>
 }
 
 // the inline version did not work - Groovy bug?
-def boolean contains(Collection collection, String path) {
+boolean contains(Collection collection, String path) {
     return collection.contains(path)
 }
 
@@ -98,7 +98,7 @@ private File askForZipFile(File zipFile) {
     return null
 }
 
-public File getUriAsFile(File mapDir, URI uri) {
+File getUriAsFile(File mapDir, URI uri) {
     try {
         if (uri == null)
             return null
@@ -235,4 +235,3 @@ boolean zipMap(File file) {
 
 ///////////////////// MAIN //////////////////////////
 zipMap(node.map.file)
-
