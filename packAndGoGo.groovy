@@ -218,7 +218,7 @@ boolean zipMap(File file) {
     if (zipFile == null)
         return
     def dependenciesDir = "${baseName}-files"
-    MapModel newMap = c.mapLoader(file.toURI().toURL()).mindMap.delegate
+    MapModel newMap = c.mapLoader(file.toURI().toURL()).unsetMapLocation().mindMap.delegate
     if (newMap == null) {
         ui.errorMessage(getText('Can not create a copy of {0}', file))
         return
