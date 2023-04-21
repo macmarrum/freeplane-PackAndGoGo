@@ -8,15 +8,10 @@
 
 
 import org.freeplane.core.ui.CaseSensitiveFileNameExtensionFilter
-import org.freeplane.core.util.FreeplaneVersion
 import org.freeplane.core.util.LogUtils
 import org.freeplane.features.map.MapModel
 import org.freeplane.features.map.MapWriter.Mode
-import org.freeplane.features.map.mindmapmode.MMapModel
 import org.freeplane.features.mode.Controller
-import org.freeplane.features.mode.ModeController
-import org.freeplane.features.mode.mindmapmode.MModeController
-import org.freeplane.features.url.mindmapmode.MFileManager
 import org.freeplane.plugin.script.proxy.MapProxy
 
 import javax.swing.*
@@ -25,23 +20,6 @@ import java.util.regex.Matcher
 import java.util.regex.Pattern
 import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
-
-private MapModel loadMap(URL url) {
-    final ModeController modeController = Controller.getCurrentController().getModeController(MModeController.MODENAME)
-    final MFileManager fileManager = (MFileManager) MFileManager.getController(modeController)
-    MapModel newMap
-    if (c.freeplaneVersion.isOlderThan(FreeplaneVersion.getVersion('1.2.12'))) {
-        newMap = modeController.getMapController().newModel(null)
-        // ugly - no check possible
-        fileManager.loadImpl(url, newMap)
-    } else {
-        newMap = new MMapModel()
-        if (!fileManager.loadImpl(url, newMap)) {
-            return null
-        }
-    }
-    return newMap
-}
 
 private byte[] getZipBytes(Map<File, String> fileToPathInZipMap, File mapFile, byte[] mapBytes) {
     def byteArrayOutputStream = new ByteArrayOutputStream()
@@ -240,7 +218,6 @@ boolean zipMap(File file) {
     if (zipFile == null)
         return
     def dependenciesDir = "${baseName}-files"
-
     MapModel newMap = c.mapLoader(file.toURI().toURL()).mindMap.delegate
     if (newMap == null) {
         ui.errorMessage(getText('Can not create a copy of {0}', file))
