@@ -152,8 +152,10 @@ private createFileToPathInZipMap(MindMap newMindMap, String dependenciesDir) {
             node.link.text = path
         // == external object
         path = getMappedPath(node.externalObject.uri, map, mapDir, dependenciesDir)
-        if (path)
-            node.externalObject.uri = path
+        if (path) {
+            // when setting a string, externalObject.uri goes via new URL(str).toURI(), which requires protocol, hence fails for relative paths
+            node.externalObject.uri = URI.create(path)
+        }
         // == attributes
         def attributes = node.attributes
         for (int i = 0; i < attributes.size(); i++) {
