@@ -98,18 +98,20 @@ private File askForZipFile(File zipFile) {
     return null
 }
 
-File getUriAsFile(File mapDir, URI uri) {
+static File getUriAsFile(File mapDir, URI uri) {
     try {
         if (uri == null)
             return null
-        def scheme = uri.getScheme()
-        if (!uri.isAbsolute() && (scheme == null || scheme.equals("file"))) {
-            return new File(mapDir, uri.getPath())
+        def scheme = uri.scheme
+        if (scheme == null || scheme == 'file') {
+            // uri.path is null when e.g. 'file:abc.txt', therefore uri.schemeSpecificPart
+            def path = uri.path ?: uri.schemeSpecificPart
+            def file = new File(path)
+            return (file.absolute) ? file : new File(mapDir, path)
         }
         return new File(uri)
-    }
-    catch (Exception e) {
-        LogUtils.info("link is not a file uri: " + e)
+    } catch (Exception e) {
+        LogUtils.info("link is not a file uri: $e")
         return null
     }
 }
