@@ -128,7 +128,7 @@ static File getUriAsFile(File mapDir, URI uri) {
 
 // searches the map for file references that have to be mapped to a file in the zip
 private createFileToPathInZipMap(MindMap newMindMap, String dependenciesDir) {
-    File mapDir = node.map.file.parentFile
+    File mapDir = node.mindMap.file.parentFile
     // closure, re-usable for text, details and notes
     def handleHtmlText = { String text, Map<File, String> map ->
         if (!text)
@@ -218,12 +218,12 @@ boolean zipMap(File file) {
         ui.errorMessage(getText('You have to save this map first'))
         return
     }
-    if (!node.map.isSaved()) {
-        def question = getText('Do you want to save {0} first?', node.map.name)
+    if (!node.mindMap.isSaved()) {
+        def question = getText('Do you want to save {0} first?', node.mindMap.name)
         def title = getText('Create zip file')
         final int selection = JOptionPane.showConfirmDialog(ui.frame, question, title, JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE)
         if (selection == JOptionPane.YES_OPTION)
-            node.map.save(false)
+            node.mindMap.save(false)
         else if (selection == JOptionPane.CANCEL_OPTION)
             return
     }
@@ -248,4 +248,4 @@ boolean zipMap(File file) {
 }
 
 ///////////////////// MAIN //////////////////////////
-zipMap(node.map.file)
+zipMap(node.mindMap.file)
