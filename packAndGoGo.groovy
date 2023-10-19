@@ -26,8 +26,6 @@ import org.freeplane.features.mode.Controller
 
 import javax.swing.*
 import java.text.MessageFormat
-import java.util.regex.Matcher
-import java.util.regex.Pattern
 import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
 
@@ -108,7 +106,12 @@ private File askForZipFile(File zipFile) {
     return null
 }
 
-static File getUriAsFile(File mapDir, URI uri) {
+/**
+ * It is used to collect unique file paths.
+ * Canonical, so that ../ and ./ do not lead to different paths for the same file.
+ * @return canonical file for the URI
+ */
+static File getUriAsCanonicalFile(File mapDir, URI uri) {
     try {
         if (uri == null)
             return null
@@ -117,9 +120,9 @@ static File getUriAsFile(File mapDir, URI uri) {
             // uri.path is null when e.g. 'file:abc.txt', therefore uri.schemeSpecificPart
             def path = uri.path ?: uri.schemeSpecificPart
             def file = new File(path)
-            return (file.absolute) ? file : new File(mapDir, path)
+            return file.absolute ? file.canonicalFile : new File(mapDir, path).canonicalFile
         }
-        return new File(uri)
+        return new File(uri).canonicalFile
     } catch (Exception e) {
         LogUtils.info("link is not a file uri: $e")
         return null
@@ -133,17 +136,19 @@ private createFileToPathInZipMap(MindMap newMindMap, String dependenciesDir) {
     def handleHtmlText = { String text, Map<File, String> map ->
         if (!text)
             return text
-        Pattern links = Pattern.compile('(href|src)=["\']([^"\']+)["\']')
-        Matcher m = links.matcher(text)
+        // regex needs to cover single or double quotes surrounding the url
+        // special case: href="abc.mm#at(/**/'A%201%20b')"
+        def links = ~/(href|src)=(["'])(.+)\2/
+        def m = links.matcher(text)
         // optimize for the regular case: no StringBuffer et al if there is no need for it
         if (m.find()) {
-            StringBuffer buffer = new StringBuffer()
+            def buffer = new StringBuffer()
             for (; ;) {
-                def ref = m.group(2)
+                def ref = m.group(3)
                 def xpath = getMappedPath(ref, map, mapDir, dependenciesDir)
                 if (xpath) {
                     logger.info("patching inline reference ${m.group(0)}")
-                    m.appendReplacement(buffer, "${m.group(1)}='${xpath}'")
+                    m.appendReplacement(buffer, "${m.group(1)}=${m.group(2)}${xpath}${m.group(2)}")
                 } else {
                     m.appendReplacement(buffer, m.group(0))
                 }
@@ -156,7 +161,7 @@ private createFileToPathInZipMap(MindMap newMindMap, String dependenciesDir) {
         }
         return text
     }
-    def fileToPathInZipMap = newMindMap.root.findAll().inject([:]) { map, node ->
+    def fileToPathInZipMap = newMindMap.root.findAll().inject(new LinkedHashMap<File, String>()) { map, node ->
         def path
         // == link
         path = getMappedPath(node.link.uri, map, mapDir, dependenciesDir)
@@ -170,20 +175,22 @@ private createFileToPathInZipMap(MindMap newMindMap, String dependenciesDir) {
         }
         // == attributes
         def attributes = node.attributes
-        for (int i = 0; i < attributes.size(); i++) {
-            def value = attributes.get(i)
+        attributes.eachWithIndex { value, i ->
             if (value instanceof URI) {
                 path = getMappedPath(value, map, mapDir, dependenciesDir)
                 if (path)
                     attributes.set(i, new URI(path))
             }
         }
-        if (htmlUtils.isHtmlNode(node.text))
-            node.text = handleHtmlText(node.text, map)
-        if (node.detailsText)
-            node.details = handleHtmlText(node.detailsText, map)
-        if (node.note) // not noteText due to bug in first 1.2 beta
-            node.noteText = handleHtmlText(node.noteText, map)
+        def nodeText = node.text
+        if (htmlUtils.isHtmlNode(nodeText))
+            node.text = handleHtmlText(nodeText, map)
+        def detailsText = node.detailsText
+        if (detailsText)
+            node.detailsText = handleHtmlText(detailsText, map)
+        def noteText = node.noteText
+        if (noteText)
+            node.noteText = handleHtmlText(noteText, map)
 
         return map
     }
@@ -194,11 +201,12 @@ private String getMappedPath(Object uriObject, Map<File, String> fileToPathInZip
     if (!uriObject)
         return null
     URI uri = (uriObject instanceof URI) ? uriObject : new URI(uriObject.toString())
-    def f = getUriAsFile(mapDir, uri)
+    def f = getUriAsCanonicalFile(mapDir, uri)
     if (f != null && f.exists()) {
         def path = getPathInZip(f, dependenciesDir, fileToPathInZipMap)
         fileToPathInZipMap[f] = path
-        return urlEncode(path)
+        path = urlEncode(path)
+        return uri.rawFragment ? path + '#' + uri.rawFragment : path
     }
     return null
 }
