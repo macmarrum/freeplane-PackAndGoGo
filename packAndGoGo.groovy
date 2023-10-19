@@ -77,11 +77,11 @@ private String getPathInZip(File file, String dependenciesDir, Map<File, String>
 }
 
 // the inline version did not work - Groovy bug?
-boolean contains(Collection collection, String path) {
+static boolean contains(Collection collection, String path) {
     return collection.contains(path)
 }
 
-private byte[] getBytes(MapModel map) {
+private static byte[] getBytes(MapModel map) {
     StringWriter stringWriter = new StringWriter(4 * 1024)
     BufferedWriter out = new BufferedWriter(stringWriter)
     Controller.getCurrentModeController().getMapController().getMapWriter()
@@ -211,11 +211,11 @@ private String getMappedPath(Object uriObject, Map<File, String> fileToPathInZip
     return null
 }
 
-private urlEncode(String string) {
+private static urlEncode(String string) {
     string.replace(' ', '%20')
 }
 
-private String getText(String key, Object... parameters) {
+private static String getText(String key, Object... parameters) {
     if (parameters)
         return MessageFormat.format(key, parameters)
     return key
