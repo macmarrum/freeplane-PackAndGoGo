@@ -213,7 +213,8 @@ private String getMappedPath(Object uriObject, Map<File, String> fileToPathInZip
 }
 
 private static urlEncode(String string) {
-    string.replace(' ', '%20')
+    def uri = new URI(null, string, null)
+    return uri.rawPath
 }
 
 private static String getText(String key, Object... parameters) {
