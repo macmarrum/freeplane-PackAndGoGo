@@ -1,6 +1,6 @@
 // @ExecutionModes({on_single_node="/menu_bar/file"})
 /* Copyright (C) 2011-2012 Volker Boerchers
- * Copyright (C) 2023   macmarrum
+ * Copyright (C) 2023, 2024   macmarrum
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,6 +25,7 @@ import org.freeplane.features.map.MapWriter.Mode
 import org.freeplane.features.mode.Controller
 
 import javax.swing.*
+import java.nio.charset.StandardCharsets
 import java.text.MessageFormat
 import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
@@ -86,7 +87,7 @@ private static byte[] getBytes(MapModel map) {
     BufferedWriter out = new BufferedWriter(stringWriter)
     Controller.getCurrentModeController().getMapController().getMapWriter()
             .writeMapAsXml(map, out, Mode.FILE, true, false)
-    return stringWriter.buffer.toString().bytes
+    return stringWriter.buffer.toString().getBytes(StandardCharsets.UTF_8)
 }
 
 private boolean confirmOverwrite(File file) {
