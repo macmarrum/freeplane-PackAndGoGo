@@ -20,6 +20,7 @@
 import org.freeplane.api.MindMap
 import org.freeplane.core.ui.CaseSensitiveFileNameExtensionFilter
 import org.freeplane.core.util.LogUtils
+import org.freeplane.features.map.clipboard.MapClipboardController
 import org.freeplane.features.map.MapModel
 import org.freeplane.features.map.MapWriter.Mode
 import org.freeplane.features.mode.Controller
@@ -85,8 +86,12 @@ static boolean contains(Collection collection, String path) {
 private static byte[] getBytes(MapModel map) {
     StringWriter stringWriter = new StringWriter(4 * 1024)
     BufferedWriter out = new BufferedWriter(stringWriter)
-    Controller.getCurrentModeController().getMapController().getMapWriter()
-            .writeMapAsXml(map, out, Mode.FILE, true, false)
+    def mapWriter = Controller.getCurrentModeController().getMapController().getMapWriter()
+    try { // since 1.11.8 (2f8e7017)
+        mapWriter.writeMapAsXml(map, out, Mode.FILE, MapClipboardController.CopiedNodeSet.ALL_NODES, false)
+    } catch (MissingMethodException) { // till 1.11.8 (2f8e7017)
+        mapWriter.writeMapAsXml(map, out, Mode.FILE, true, false)
+    }
     return stringWriter.buffer.toString().getBytes(StandardCharsets.UTF_8)
 }
 
