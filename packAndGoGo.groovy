@@ -1,6 +1,6 @@
 // @ExecutionModes({on_single_node="/menu_bar/file"})
 /* Copyright (C) 2011-2012 Volker Boerchers
- * Copyright (C) 2023, 2024   macmarrum
+ * Copyright (C) 2023-2025  macmarrum (at) outlook (dot) ie
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -89,7 +89,7 @@ private static byte[] getBytes(MapModel map) {
     def mapWriter = Controller.getCurrentModeController().getMapController().getMapWriter()
     try { // since 1.11.8 (2f8e7017)
         mapWriter.writeMapAsXml(map, out, Mode.FILE, MapClipboardController.CopiedNodeSet.ALL_NODES, false)
-    } catch (MissingMethodException) { // till 1.11.8 (2f8e7017)
+    } catch (MissingMethodException | MissingPropertyException ignored) { // till 1.11.8 (2f8e7017)
         mapWriter.writeMapAsXml(map, out, Mode.FILE, true, false)
     }
     return stringWriter.buffer.toString().getBytes(StandardCharsets.UTF_8)
@@ -251,6 +251,10 @@ boolean zipMap(File file) {
     if (newMindMap == null) {
         ui.errorMessage(getText('Can not create a copy of {0}', file))
         return
+    }
+    try { // API exists since 1.11.11
+        newMindMap.associatedTemplate = node.mindMap.associatedTemplate
+    } catch (MissingPropertyException ignore) {
     }
     // original file -> zip file name
     def fileToPathInZipMap = createFileToPathInZipMap(newMindMap, dependenciesDir)
