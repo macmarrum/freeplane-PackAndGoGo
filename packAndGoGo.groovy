@@ -203,14 +203,17 @@ private createFileToPathInZipMap(MindMap newMindMap, String dependenciesDir) {
     return fileToPathInZipMap
 }
 
-private String getMappedPath(Object uriObject, Map<File, String> fileToPathInZipMap, File mapDir, String dependenciesDir) {
-    if (!uriObject)
-        return null
-    URI uri = (uriObject instanceof URI) ? uriObject : new URI(uriObject.toString())
-    def f = getUriAsCanonicalFile(mapDir, uri)
-    if (f != null && f.exists()) {
-        def path = getPathInZip(f, dependenciesDir, fileToPathInZipMap)
-        fileToPathInZipMap[f] = path
+    private String getMappedPath(Object uriObject, Map<File, String> fileToPathInZipMap, File mapDir, String dependenciesDir) {
+        if (!uriObject)
+            return null
+        URI uri = (uriObject instanceof URI) ? uriObject : new URI(uriObject.toString())
+        if (uri.scheme == null && (uri.path == null || uri.path.isEmpty())) {
+            return null
+        }
+        def f = getUriAsCanonicalFile(mapDir, uri)
+        if (f != null && f.exists()) {
+            def path = getPathInZip(f, dependenciesDir, fileToPathInZipMap)
+            fileToPathInZipMap[f] = path
         path = urlEncode(path)
         return uri.rawFragment ? path + '#' + uri.rawFragment : path
     }
